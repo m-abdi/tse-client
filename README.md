@@ -5,8 +5,9 @@
 </p>
 A Rust library crate and port of the [`tse-client`](https://www.npmjs.com/package/tse-client) npm package, providing a client for accessing data from the Tehran Stock Exchange Technology Management Company (TSETMC). The crate supports fetching OHLC (Open/High/Low/Close) candlestick data, intraday trading data, market indices, and the complete list of tradable instruments across all major Iranian capital markets, including the Tehran Stock Exchange (TSE / بورس تهران), Iran Fara Bourse (IFB / فرابورس ایران), and the Base Market (بازار پایه). Supported indices include the Total Index (شاخص کل) and IFB Total Index (شاخص کل فرابورس).
 
+
 > [!NOTE]
-> This proxy must be deployed on a server located **inside Iran**. TSE data
+> This crate must be called on a server located **inside Iran**. TSE data
 > servers are not accessible from outside the country.
 
 ## Features
