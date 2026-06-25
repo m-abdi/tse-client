@@ -14,6 +14,7 @@ use regex::Regex;
 use crate::adjust::{AdjustInfo, adjust};
 use crate::config::{Config, PriceSettings, SYMBOL_RENAME_STRING, TRADING_SESSION_END_HOUR};
 use crate::error::{Result, ResultError};
+use crate::group::group;
 use crate::models::{ClosingPrice, Column, Instrument, Share};
 use crate::request::Requester;
 use crate::storage::Storage;
@@ -987,6 +988,11 @@ impl Client {
         }
         let start: i64 = settings.start_date.parse().unwrap_or(0);
         prices.retain(|p| p.deven.parse::<i64>().unwrap_or(0) > start);
+
+        // Resample into weekly/monthly Jalali bars when requested. Daily is a
+        // no-op, so this is free for the default path. Done last so grouping
+        // sees adjusted, filtered, date-bounded rows.
+        let prices = group(&prices, settings.period);
 
         Ok(Some(InstrumentDataOut {
             prices,

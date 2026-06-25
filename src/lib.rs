@@ -43,6 +43,7 @@ pub mod adjust;
 pub mod client;
 pub mod config;
 pub mod error;
+pub mod group;
 pub mod intraday;
 pub mod models;
 pub mod request;
@@ -52,6 +53,7 @@ pub mod util;
 pub use client::{Cell, Client, InstrumentPrices, PricesResult};
 pub use config::{Config, IntradaySettings, PriceSettings};
 pub use error::{Error, Result, ResultError};
+pub use group::{Period, group};
 pub use models::{
     COLS, COLS_FA, ClosingPrice, Column, Instrument, InstrumentItd, Share, itd_group_cols,
 };

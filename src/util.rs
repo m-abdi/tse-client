@@ -119,3 +119,37 @@ pub fn should_update(deven: &str, last_possible_deven: &str) -> bool {
         })
         && !(in_weekend && last_update_weekday != 3 && days_passed <= 3)
 }
+
+/// Jalali "YYYYMM" (year+month) key for a Gregorian "YYYYMMDD" date.
+///
+/// Returns `None` when the date can't be converted (the caller can then keep
+/// the row ungrouped). The result is the Jalali calendar month the date falls
+/// in, e.g. a Gregorian date in mid-Farvardin returns `"<jyear>01"`.
+pub fn shamsi_month_key(greg: &str) -> Option<String> {
+    let sh = greg_to_shamsi(greg);
+    if sh.len() < 6 {
+        return None;
+    }
+    // greg_to_shamsi returns the input unchanged on failure; guard against that
+    // by ensuring the conversion actually produced a Jalali string.
+    if sh == greg {
+        return None;
+    }
+    Some(sh[0..6].to_string())
+}
+
+/// Start-of-week key for grouping by Jalali weeks.
+///
+/// The Jalali (Solar Hijri) week begins on Saturday (شنبه) and ends on Friday
+/// (جمعه). This returns the Gregorian "YYYYMMDD" date of the Saturday that
+/// starts the week containing `greg`, which is used as a stable grouping key.
+/// Returns `None` when the date can't be parsed.
+pub fn shamsi_week_key(greg: &str) -> Option<String> {
+    let date = str_to_date(greg)?;
+    // `number_days_from_sunday()` is Sunday=0 .. Saturday=6. The Jalali week
+    // starts on Saturday, so shift the origin: days since Saturday is
+    // (sunday_index + 1) % 7 (Sat->0, Sun->1, ... Fri->6).
+    let days_since_saturday = ((date.weekday().number_days_from_sunday() + 1) % 7) as i64;
+    let week_start = date - time::Duration::days(days_since_saturday);
+    Some(date_to_str(week_start))
+}

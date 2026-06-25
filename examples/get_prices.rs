@@ -5,16 +5,21 @@
 //! cargo run --example get_prices
 //! ```
 
-use tse_client::{Client, PriceSettings};
+use tse_client::{Client, Period, PriceSettings};
 
 #[tokio::main]
 async fn main() -> tse_client::Result<()> {
     let client = Client::new()?;
 
     let symbols = vec!["فملی".to_string()];
-    let res = client
-        .get_prices(&symbols, &PriceSettings::default())
-        .await?;
+
+    // Weekly timeframe (Jalali Saturday–Friday). Use Period::Daily (the
+    // default) for daily rows or Period::Monthly for Jalali months.
+    let settings = PriceSettings {
+        period: Period::Weekly,
+        ..PriceSettings::default()
+    };
+    let res = client.get_prices(&symbols, &settings).await?;
 
     if let Some(err) = &res.error {
         eprintln!("request error: {err:?}");

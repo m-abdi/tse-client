@@ -5,6 +5,8 @@
 //! client instead of `static mut`, which is both safer and avoids cross-call
 //! state bleed.
 
+use crate::group::Period;
+
 /// Tunable client configuration (the JS `*_UPDATE_*` globals and URLs).
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -55,6 +57,9 @@ pub struct PriceSettings {
     pub csv: bool,
     pub csv_headers: bool,
     pub csv_delimiter: String,
+    /// Resampling timeframe for the returned rows. Daily (default) keeps the
+    /// rows as-is; Weekly/Monthly aggregate them using the Jalali calendar.
+    pub period: Period,
 }
 
 impl Default for PriceSettings {
@@ -71,6 +76,7 @@ impl Default for PriceSettings {
             csv: false,
             csv_headers: true,
             csv_delimiter: ",".to_string(),
+            period: Period::Daily,
         }
     }
 }
