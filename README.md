@@ -1,11 +1,13 @@
 # tse-client (Rust)
 
+<p align="center">
+<img src="assets/tsetmc.png" alt="TSETMC" width="150">
+</p>
 A Rust library crate and port of the [`tse-client`](https://www.npmjs.com/package/tse-client) npm package, providing a client for accessing data from the Tehran Stock Exchange Technology Management Company (TSETMC). The crate supports fetching OHLC (Open/High/Low/Close) candlestick data, intraday trading data, market indices, and the complete list of tradable instruments across all major Iranian capital markets, including the Tehran Stock Exchange (TSE / بورس تهران), Iran Fara Bourse (IFB / فرابورس ایران), and the Base Market (بازار پایه). Supported indices include the Total Index (شاخص کل) and IFB Total Index (شاخص کل فرابورس).
 
 > [!NOTE]
 > This proxy must be deployed on a server located **inside Iran**. TSE data
 > servers are not accessible from outside the country.
-
 
 ## Features
 
@@ -16,7 +18,6 @@ A Rust library crate and port of the [`tse-client`](https://www.npmjs.com/packag
 - 📅 Jalali (Solar Hijri) calendar support for correct weekly/monthly grouping
 - 🔧 Adjusted prices support
 - 🦀 High-performance Rust implementation and port of `tse-client`
-
 
 ## Public API
 
@@ -52,9 +53,9 @@ async fn main() -> tse_client::Result<()> {
 ### Weekly / monthly timeframe (Jalali calendar)
 
 `get_prices` can resample daily data into weekly or monthly OHLCV bars using
-Jalali (Solar Hijri) calendar boundaries. Weeks run Saturday–Friday (the
-Iranian trading week); months follow the Jalali calendar. Set the `period`
-field on `PriceSettings`:
+Jalali (Solar Hijri) calendar boundaries. Weeks run Saturday–Friday (the Iranian
+trading week); months follow the Jalali calendar. Set the `period` field on
+`PriceSettings`:
 
 ```rust
 use tse_client::{Client, Period, PriceSettings};
@@ -70,8 +71,8 @@ let res = client.get_prices(&["فملی".to_string()], &settings).await?;
 # }
 ```
 
-You can also group already-parsed `ClosingPrice` rows directly with the
-free function:
+You can also group already-parsed `ClosingPrice` rows directly with the free
+function:
 
 ```rust
 use tse_client::{group, ClosingPrice, Period};
@@ -94,8 +95,8 @@ struct.
 
 ## Notable differences from the JS version (bug / leak fixes)
 
-The original JS kept several **module-level mutable maps** that were *never
-cleared between calls*:
+The original JS kept several **module-level mutable maps** that were _never
+cleared between calls_:
 
 - `storedPrices` — accumulated every instrument's full price history ever
   fetched, for the lifetime of the process.
