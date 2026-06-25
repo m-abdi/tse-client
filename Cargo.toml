@@ -1,0 +1,36 @@
+[package]
+name = "tse-client"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+authors = ["Mehdi Abdi <m.abdi.public@gmail.com>"]
+description = "A client for fetching stock data from the Tehran Stock Exchange (TSETMC). Rust port of the tse-client npm package."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/m-abdi/tse-client"
+documentation = "https://docs.rs/tse-client"
+keywords = ["tsetmc", "tse", "tehran", "stock", "finance"]
+categories = ["api-bindings"]
+exclude = ["/target", "/.git", "/.gitignore"]
+
+[lib]
+name = "tse_client"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+rust_decimal = "1"
+rust_decimal_macros = "1"
+ptime = "0.1"
+time = { version = "0.3", features = ["local-offset"] }
+flate2 = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+dirs = "5"
+regex = "1"
+once_cell = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
