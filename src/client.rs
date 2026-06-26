@@ -46,11 +46,22 @@ pub enum Cell {
     Number(f64),
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct OhlcData {
+    pub date: Vec<String>,
+    pub open: Vec<f64>,
+    pub high: Vec<f64>,
+    pub low: Vec<f64>,
+    pub close: Vec<f64>,
+    pub volume: Vec<f64>,
+}
+
 /// Structured per-instrument price output.
 #[derive(Debug, Clone, Default)]
 pub struct InstrumentPrices {
     /// header -> column of cells
     pub columns: HashMap<String, Vec<Cell>>,
+    pub ohlc_data: OhlcData,
     pub adjust_info: Option<AdjustInfo>,
     /// Set when this symbol was merged into another (JS `MERGED_SYMBOL_CONTENT`).
     pub merged: bool,
@@ -780,6 +791,25 @@ impl Client {
                         }
                     }
                 }
+                // populate OHLC data
+                insdata.prices.iter().for_each(|item| {
+                    out.ohlc_data.date.push(item.deven.clone());
+                    out.ohlc_data
+                        .open
+                        .push(item.price_first.parse::<f64>().unwrap_or(f64::NAN));
+                    out.ohlc_data
+                        .high
+                        .push(item.price_max.parse::<f64>().unwrap_or(f64::NAN));
+                    out.ohlc_data
+                        .low
+                        .push(item.price_min.parse::<f64>().unwrap_or(f64::NAN));
+                    out.ohlc_data
+                        .close
+                        .push(item.pclosing.parse::<f64>().unwrap_or(f64::NAN));
+                    out.ohlc_data
+                        .volume
+                        .push(item.qtot_tran5j.parse::<f64>().unwrap_or(f64::NAN));
+                });
                 result.data.push(Some(out));
             }
         }
@@ -986,8 +1016,29 @@ impl Client {
         if !settings.days_without_trade {
             prices.retain(|p| p.ztot_tran.parse::<i64>().unwrap_or(0) > 0);
         }
+
+        // Validate date range: start_date <= end_date
         let start: i64 = settings.start_date.parse().unwrap_or(0);
+        if !settings.end_date.is_empty() {
+            let end: i64 = settings.end_date.parse().unwrap_or(i64::MAX);
+            if start > 0 && end < i64::MAX && start > end {
+                // Invalid date range - return empty result
+                prices.clear();
+                return Ok(Some(InstrumentDataOut {
+                    prices,
+                    adjust_info,
+                    merged: false,
+                }));
+            }
+        }
+
         prices.retain(|p| p.deven.parse::<i64>().unwrap_or(0) > start);
+
+        // Apply end date filtering if specified
+        if !settings.end_date.is_empty() {
+            let end: i64 = settings.end_date.parse().unwrap_or(i64::MAX);
+            prices.retain(|p| p.deven.parse::<i64>().unwrap_or(0) <= end);
+        }
 
         // Resample into weekly/monthly Jalali bars when requested. Daily is a
         // no-op, so this is free for the default path. Done last so grouping

@@ -28,7 +28,10 @@ async fn main() -> tse_client::Result<()> {
 
     for (symbol, instrument) in symbols.iter().zip(res.data.iter()) {
         match instrument {
-            Some(prices) => println!("{symbol}: {} columns", prices.columns.len()),
+            Some(prices) => {
+                println!("{symbol}: {} columns", prices.columns.len());
+                println!("{symbol}: {} candles", prices.ohlc_data.date.len())
+            }
             None => println!("{symbol}: not found"),
         }
     }

@@ -46,17 +46,76 @@ impl Default for Config {
 /// Per-call settings for `get_prices` (JS `defaultSettings`).
 #[derive(Debug, Clone)]
 pub struct PriceSettings {
+    /// Column indices to include in the output.
+    ///
+    /// Maps to `columnList` indices. Default: `[0, 2, 3, 4, 5, 6, 7, 8, 9]`
     pub columns: Vec<usize>,
+
+    /// Price adjustment mode applied to returned data.
+    ///
+    /// - `0`: No adjustment (`بدون تعدیل`)
+    /// - `1`: Capital increase + dividends (`افزایش سرمایه + سود نقدی`)
+    /// - `2`: Capital increase only (`افزایش سرمایه`)
     pub adjust_prices: u8,
+
+    /// If `true`, an `adjust_info` payload is appended to each `ClosingPrice`
+    /// containing all events needed to manually re-apply price adjustment.
+    ///
+    /// Default: `false`
     pub get_adjust_info: bool,
+
+    /// If `true`, returns only the `adjust_info` payload without any
+    /// `ClosingPrice` data. Implies `get_adjust_info`.
+    ///
+    /// Default: `false`
     pub get_adjust_info_only: bool,
+
+    /// If `true`, rows with zero trades are included in the output.
+    ///
+    /// Default: `false`
     pub days_without_trade: bool,
+
+    /// Start date for price data in `YYYYMMDD` format (e.g., `"20230101"`).
+    /// Only prices with dates greater than this value will be included.
+    ///
+    /// Min: `"20010321"`. Default: `"20010321"`
     pub start_date: String,
+
+    /// End date for price data in `YYYYMMDD` format (e.g., `"20231231"`).
+    /// Only prices with dates less than or equal to this value will be included.
+    /// If empty, no end date filtering is applied.
+    ///
+    /// `start_date` should be less than or equal to `end_date` when both are specified.
+    pub end_date: String,
+
+    /// If `true`, data for similar renamed symbols is merged into a single series.
+    ///
+    /// Default: `true`
     pub merge_similar_symbols: bool,
+
+    /// If `true`, downloaded data is persisted to the local cache directory.
+    ///
+    /// Default: `true`
     pub cache: bool,
+
+    /// If `true`, each symbol's result is returned as a CSV string instead
+    /// of a structured `ClosingPrice` object.
+    ///
+    /// Default: `false`
     pub csv: bool,
+
+    /// If `true`, a header row is prepended to each CSV result.
+    /// Has no effect when `csv` is `false`.
+    ///
+    /// Default: `true`
     pub csv_headers: bool,
+
+    /// Cell delimiter character used when generating CSV results.
+    /// Has no effect when `csv` is `false`.
+    ///
+    /// Default: `","`
     pub csv_delimiter: String,
+
     /// Resampling timeframe for the returned rows. Daily (default) keeps the
     /// rows as-is; Weekly/Monthly aggregate them using the Jalali calendar.
     pub period: Period,
@@ -71,6 +130,7 @@ impl Default for PriceSettings {
             get_adjust_info_only: false,
             days_without_trade: false,
             start_date: "20010321".to_string(),
+            end_date: String::new(),
             merge_similar_symbols: true,
             cache: true,
             csv: false,
