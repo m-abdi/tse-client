@@ -1032,7 +1032,7 @@ impl Client {
             }
         }
 
-        prices.retain(|p| p.deven.parse::<i64>().unwrap_or(0) > start);
+        prices.retain(|p| p.deven.parse::<i64>().unwrap_or(0) >= start);
 
         // Apply end date filtering if specified
         if !settings.end_date.is_empty() {
