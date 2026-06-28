@@ -805,7 +805,7 @@ impl Client {
                         .push(item.price_min.parse::<f64>().unwrap_or(f64::NAN));
                     out.ohlc_data
                         .close
-                        .push(item.pclosing.parse::<f64>().unwrap_or(f64::NAN));
+                        .push(item.pdr_cot_val.parse::<f64>().unwrap_or(f64::NAN));
                     out.ohlc_data
                         .volume
                         .push(item.qtot_tran5j.parse::<f64>().unwrap_or(f64::NAN));
