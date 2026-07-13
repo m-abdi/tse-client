@@ -108,7 +108,7 @@ fn shamsi_week_key_groups_saturday_to_friday() {
 fn shamsi_month_key_matches_jalali_month() {
     // 2023-04-21 falls in Jalali 1402/02 (Ordibehesht).
     let key = shamsi_month_key("20230421").unwrap();
-    assert_eq!(&key, &greg_to_shamsi("20230421")[0..6]);
+    assert_eq!(&key, "20230421");
 }
 
 #[test]
@@ -141,7 +141,7 @@ fn group_weekly_aggregates_ohlcv() {
     assert_eq!(w1.pclosing, "13"); // last close
     assert_eq!(w1.price_yesterday, "8"); // first yesterday
     assert_eq!(w1.qtot_tran5j, "600"); // summed volume
-    assert_eq!(w1.deven, "20230529"); // last trading day in the week
+    assert_eq!(w1.deven, "20230527"); // first trading day in the week
 
     let w2 = &out[1];
     assert_eq!(w2.price_first, "20");
@@ -163,7 +163,7 @@ fn group_monthly_aggregates_ohlcv() {
 
     assert_eq!(out[0].price_max, "18");
     assert_eq!(out[0].qtot_tran5j, "250");
-    assert_eq!(out[0].deven, "20230422");
+    assert_eq!(out[0].deven, "20230421");
 
     assert_eq!(out[1].pclosing, "24");
     assert_eq!(out[1].qtot_tran5j, "300");

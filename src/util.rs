@@ -120,11 +120,14 @@ pub fn should_update(deven: &str, last_possible_deven: &str) -> bool {
         && !(in_weekend && last_update_weekday != 3 && days_passed <= 3)
 }
 
-/// Jalali "YYYYMM" (year+month) key for a Gregorian "YYYYMMDD" date.
+/// Gregorian "YYYYMMDD" for the first day of the Jalali month containing
+/// the given Gregorian "YYYYMMDD" date.
 ///
 /// Returns `None` when the date can't be converted (the caller can then keep
-/// the row ungrouped). The result is the Jalali calendar month the date falls
-/// in, e.g. a Gregorian date in mid-Farvardin returns `"<jyear>01"`.
+/// the row ungrouped). The result is the Gregorian date corresponding to the
+/// 1st of the Jalali calendar month the input date falls in, e.g. a
+/// Gregorian date in mid-Farvardin returns the Gregorian date for
+/// "<jyear>0101".
 pub fn shamsi_month_key(greg: &str) -> Option<String> {
     let sh = greg_to_shamsi(greg);
     if sh.len() < 6 {
@@ -135,7 +138,16 @@ pub fn shamsi_month_key(greg: &str) -> Option<String> {
     if sh == greg {
         return None;
     }
-    Some(sh[0..6].to_string())
+
+    // Build "<jyear><jmonth>01" and convert back to Gregorian.
+    let month_start_shamsi = format!("{}01", &sh[0..6]);
+    let month_start_greg = shamsi_to_greg(&month_start_shamsi);
+
+    if month_start_greg.len() < 8 || month_start_greg == month_start_shamsi {
+        return None;
+    }
+
+    Some(month_start_greg)
 }
 
 /// Start-of-week key for grouping by Jalali weeks.

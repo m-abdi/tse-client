@@ -11,7 +11,7 @@ use tse_client::{Client, Period, PriceSettings};
 async fn main() -> tse_client::Result<()> {
     let client = Client::new()?;
 
-    let symbols = vec!["فملی".to_string()];
+    let symbols = vec!["وخاور".to_string()];
 
     // Weekly timeframe (Jalali Saturday–Friday). Use Period::Daily (the
     // default) for daily rows or Period::Monthly for Jalali months.

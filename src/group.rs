@@ -60,7 +60,7 @@ where
 /// Aggregate the rows of a single group into one [`ClosingPrice`] bar.
 ///
 /// `rows` must be non-empty and ordered ascending by `deven`.
-fn aggregate(rows: &[ClosingPrice]) -> ClosingPrice {
+fn aggregate(rows: &[ClosingPrice], key: &str) -> ClosingPrice {
     let first = &rows[0];
     let last = &rows[rows.len() - 1];
 
@@ -77,10 +77,9 @@ fn aggregate(rows: &[ClosingPrice]) -> ClosingPrice {
             low = l;
         }
     }
-
     ClosingPrice {
         ins_code: first.ins_code.clone(),
-        deven: last.deven.clone(),
+        deven: key.to_string(),
         pclosing: last.pclosing.clone(),
         pdr_cot_val: last.pdr_cot_val.clone(),
         ztot_tran: sum_field(rows.iter().map(|r| r.ztot_tran.as_str())),
@@ -131,11 +130,10 @@ pub fn group(prices: &[ClosingPrice], period: Period) -> Vec<ClosingPrice> {
             // Unconvertible date: skip the row rather than mis-group it.
             continue;
         };
-
         match &current_key {
             Some(k) if *k == key => bucket.push(p.clone()),
-            Some(_) => {
-                out.push(aggregate(&bucket));
+            Some(ck) => {
+                out.push(aggregate(&bucket, &ck));
                 bucket.clear();
                 bucket.push(p.clone());
                 current_key = Some(key);
@@ -148,7 +146,10 @@ pub fn group(prices: &[ClosingPrice], period: Period) -> Vec<ClosingPrice> {
     }
 
     if !bucket.is_empty() {
-        out.push(aggregate(&bucket));
+        out.push(aggregate(
+            &bucket,
+            &key_of(&bucket.last().unwrap()).unwrap(),
+        ));
     }
 
     out
