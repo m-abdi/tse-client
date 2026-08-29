@@ -133,7 +133,7 @@ pub fn group(prices: &[ClosingPrice], period: Period) -> Vec<ClosingPrice> {
         match &current_key {
             Some(k) if *k == key => bucket.push(p.clone()),
             Some(ck) => {
-                out.push(aggregate(&bucket, &ck));
+                out.push(aggregate(&bucket, ck));
                 bucket.clear();
                 bucket.push(p.clone());
                 current_key = Some(key);
@@ -146,10 +146,7 @@ pub fn group(prices: &[ClosingPrice], period: Period) -> Vec<ClosingPrice> {
     }
 
     if !bucket.is_empty() {
-        out.push(aggregate(
-            &bucket,
-            &key_of(&bucket.last().unwrap()).unwrap(),
-        ));
+        out.push(aggregate(&bucket, &key_of(bucket.last().unwrap()).unwrap()));
     }
 
     out

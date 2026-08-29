@@ -39,6 +39,53 @@ fn dec(s: &str) -> Decimal {
     Decimal::from_str(s).unwrap_or(Decimal::ZERO)
 }
 
+/// Multiply, and if it overflows `Decimal`'s 96-bit mantissa, shave scale off
+/// whichever operand carries more of it and retry. This makes no assumption
+/// about the magnitude or precision of the input data — it only gives up as
+/// much precision as is actually necessary to make the specific multiplication
+/// fit, so it's safe whether prices are single digits or six figures, and
+/// whether `coef` has accumulated 2 digits of scale or 25.
+///
+/// Falls back to `0` only if trimming scale all the way to 0 still overflows,
+/// which means the *integer* magnitude of the product itself exceeds
+/// `Decimal::MAX` (~7.9e28) — a case no amount of rounding can fix.
+fn safe_mul(a: Decimal, b: Decimal) -> Decimal {
+    if let Some(v) = a.checked_mul(b) {
+        return v;
+    }
+    let (mut a, mut b) = (a, b);
+    // Trim scale one digit at a time from whichever side has more, retrying
+    // after each step, until it fits or there's no scale left to give up.
+    while a.scale() > 0 || b.scale() > 0 {
+        if a.scale() >= b.scale() {
+            a = a.round_dp_with_strategy(
+                a.scale().saturating_sub(1),
+                RoundingStrategy::MidpointNearestEven,
+            );
+        } else {
+            b = b.round_dp_with_strategy(
+                b.scale().saturating_sub(1),
+                RoundingStrategy::MidpointNearestEven,
+            );
+        }
+        if let Some(v) = a.checked_mul(b) {
+            return v;
+        }
+    }
+    Decimal::ZERO
+}
+
+/// `a * b / c`, using the same overflow-safe multiply, plus a checked divide.
+/// Division by zero or a genuinely unrecoverable overflow leaves `coef`
+/// unchanged rather than panicking or poisoning it with a garbage value.
+fn safe_mul_div(a: Decimal, b: Decimal, c: Decimal) -> Decimal {
+    if c.is_zero() {
+        return a;
+    }
+    let ab = safe_mul(a, b);
+    ab.checked_div(c).unwrap_or(a)
+}
+
 fn round_fixed(v: Decimal, places: u32) -> String {
     // Matches `.toDecimalPlaces(n).toFixed(n)` — half-even then fixed format.
     let r = v.round_dp_with_strategy(places, RoundingStrategy::MidpointNearestEven);
@@ -162,21 +209,25 @@ pub fn adjust(
         }
 
         if cond == 1 && prices_dont_match {
-            coef = coef * dec(&next.price_yesterday) / dec(&curr.pclosing);
+            coef = safe_mul_div(coef, dec(&next.price_yesterday), dec(&curr.pclosing));
         } else if cond == 2 && prices_dont_match {
             if let Some(ts) = target_share {
                 let old_shares = Decimal::from(ts.number_of_share_old);
                 let new_shares = Decimal::from(ts.number_of_share_new);
-                coef = coef * old_shares / new_shares;
+                coef = safe_mul_div(coef, old_shares, new_shares);
             }
         }
-
-        let close = round_fixed(coef * dec(&curr.pclosing), 2);
-        let last = round_fixed(coef * dec(&curr.pdr_cot_val), 2);
-        let low = round_int(coef * dec(&curr.price_min));
-        let high = round_int(coef * dec(&curr.price_max));
-        let yday = round_int(coef * dec(&curr.price_yesterday));
-        let first = round_fixed(coef * dec(&curr.price_first), 2);
+        // No fixed scale clamp here: `safe_mul`/`safe_mul_div` above and below
+        // already trim only as much scale as each specific multiplication
+        // needs to avoid overflow, whatever `coef`'s accumulated precision or
+        // the price magnitudes happen to be — so this adapts to any data
+        // shape instead of relying on a guessed-at limit.
+        let close = round_fixed(safe_mul(coef, dec(&curr.pclosing)), 2);
+        let last = round_fixed(safe_mul(coef, dec(&curr.pdr_cot_val)), 2);
+        let low = round_int(safe_mul(coef, dec(&curr.price_min)));
+        let high = round_int(safe_mul(coef, dec(&curr.price_max)));
+        let yday = round_int(safe_mul(coef, dec(&curr.price_yesterday)));
+        let first = round_fixed(safe_mul(coef, dec(&curr.price_first)), 2);
 
         adjusted.push(ClosingPrice {
             ins_code: curr.ins_code.clone(),
