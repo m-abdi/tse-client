@@ -127,7 +127,7 @@ pub fn should_update(deven: &str, last_possible_deven: &str) -> bool {
 /// the row ungrouped). The result is the Gregorian date corresponding to the
 /// 1st of the Jalali calendar month the input date falls in, e.g. a
 /// Gregorian date in mid-Farvardin returns the Gregorian date for
-/// "<jyear>0101".
+/// "\<jyear\>0101".
 pub fn shamsi_month_key(greg: &str) -> Option<String> {
     let sh = greg_to_shamsi(greg);
     if sh.len() < 6 {
